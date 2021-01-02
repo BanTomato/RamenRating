@@ -1,0 +1,204 @@
+---
+title: "Analysis of Ramen Ratings"
+output:
+  html_document:
+    fig_width: 8
+    code_folding: hide
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Context of this project
+
+This project is intended to perform EDA(Exploratory Data Analysis) and sampling on Ratings for Ramen, using data set fetched from the below URL: <https://www.kaggle.com/residentmario/ramen-ratings>.
+
+
+## 2. Content
+
+Data set contains ramen scoring status. Including review ids, ramen brands, varieties, styles, producing countries, ratings and top 10 rankings. 7 columns, 2580 rows totally.
+
+
+## 3. Data preparation & preprocessing
+### 3.1 Data Preparation
+  1. Download the Ramen-ratings dataset in local computer. 
+  URL:<https://www.kaggle.com/residentmario/ramen-ratings>
+  
+  2. Import the data set into R.
+  Note: Set the working directory first.
+```{r}
+setwd("E:/Final_proj")
+ramen.rating <- read.csv("ramen-ratings.csv",
+                         header=TRUE)
+head(ramen.rating)
+```
+### 3.2 Processing Data 
+
+Deleted rows which are lack of information, such as empty ramen styles and items missing rates.
+
+```{r}
+data<-ramen.rating[!(ramen.rating$Style=="")&!(ramen.rating$Stars=="Unrated"), ]
+
+```
+
+
+
+## 4. Analysis of categorical Variable
+Categorical data is qualitative. It describes an event using a string of words rather than numbers.
+Here are the frequency divisions for the various ramen styles under that data. According to the graph, PACK, BOWL and CUP are the predominant packaging methods, and about 60% of the ramen are packaged in PACK.
+```{r}
+table(data$Style)
+
+s<-data.frame(table(data$Style))
+colnames(s)<-c("Style","Freq")
+
+library(plotly)
+
+
+fig <- plot_ly(s, labels = ~Style, values = ~Freq, type = 'pie')
+fig <- fig %>% layout(title = 'Ramen Package-Styles Distribution Under Data',
+                      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+fig
+```
+
+
+
+## 5. Analysis of numerical Variable
+A numerical variable is a variable where the measurement or number has a numerical meaning. 
+Ramen's ratings are able to display their numerical data. Here is the frequency and chart of the rating divisions.The ramen scores range from 1 to 5, and the scores are not integers. I chose to use scatters to show the divisional status of the different scores. As seen in the graph, most of the rating divisions are between 3 and 4.
+
+
+
+```{r}
+
+### One numerical variable
+table(data$Stars)
+
+stf<-data.frame(table(data$Stars))
+colnames(stf)<-c("Rate","Freq")
+
+#convert factors to numeric
+stf$Rate<-as.numeric(paste(stf$Rate))
+
+#graph for numerical variables
+colnames(stf)<-c("Rate","Freq")
+p <- plot_ly(stf, x = ~Rate, y = ~Freq,
+               marker = list(size = 10,
+                             color = 'rgba(255, 182, 193, .9)',
+                             line = list(color = 'rgba(152, 0, 0, .8)',
+                                         width = 2)))
+p <- p %>% layout(title = 'Rates Scatter',
+                      yaxis = list(zeroline = FALSE),
+                      xaxis = list(zeroline = FALSE))
+p
+
+```
+
+
+## 6. Analysis of Multivariate data 
+The relationship between ramen packaging and top 10 rankings is shown here, using bivariate data. 
+In statistics, bivariate data is data on each of two variables, where each value of one of the variables is paired with a value of the other variable. Typically it would be of interest to investigate the possible association between the two variables.
+
+I analyze the relationship between ramen packaging and top.ten. Based on the mosaic plot, I learned that most of the top ten ramen use the Pack for style. Bowl and cup each have only one type of ramen in the top.ten list.
+
+
+```{r}
+library(tidyverse)
+d<-as_tibble(data)
+d.top.ten<-d[!(!is.na(d$Top.Ten) & d$Top.Ten==""), ]
+table(d.top.ten$Style,d.top.ten$Top.Ten)
+#-----------
+d.top.ten<-data.frame(d.top.ten)
+colnames(d.top.ten)<-c("Num","Brand","Variety","Style","Country","Stars","Top.Ten")
+p <- plot_ly(d.top.ten, x = ~Style, y = ~Top.Ten) 
+p
+```
+
+## 7. Examing the distribution of numerical data
+What is analyzed here is the segmentation of the RATING. According to the graph, most rating divisions are above 3 points on the right side. This division is left-skewed. A left-skewed distribution has a long left tail.
+```{r}
+d.stars<-table(data$Stars)
+plot(d.stars,xlab="Stars",ylab="Frequencies",main="Distribution of Ramen Stars")
+# Left Skewed distribution
+```
+```{r}
+
+```
+
+
+## 8. Random sampling of the data: Central Limit Theorem
+
+The central limit theorem states that if you have a population with mean μ and standard deviation σ and take sufficiently large random samples from the population with replacement then the distribution of the sample means will be approximately normally distributed. 
+The sample size is 10,20,30,40,50,60. According to the graph and parameters, the distribution is closer to the mean symmetry when the sample size is large enough. Satisfying the central limit Theorm.
+```{r}
+library(sampling)
+data$Stars<-as.numeric(paste(data$Stars))
+x <- data$Stars
+par(mfrow=c(1,1))
+hist(x, prob = TRUE, 
+     xlim=c(0,6), ylim = c(0, 4),main="Distribution of Stars",xlab="stars")
+
+
+par(mfrow = c(3,2))
+samples <- 3000
+xbar <- numeric(samples)
+for (size in c(10, 20, 30, 40, 50, 60)) {
+  for (i in 1:samples) {
+    xbar[i] <- mean(sample(x, size, replace = FALSE))
+  }
+  
+  hist(xbar, prob = TRUE, 
+       xlim=c(0,6), ylim = c(0, 4),
+       main = paste("Sample Size =", size),xlab="Stars")
+  
+  cat("Sample Size = ", size, " Mean = ", mean(xbar),
+      " SD = ", sd(xbar), "\n")
+}
+par(mfrow = c(1,1))
+
+
+```
+
+## 9. Sampling Methods 
+The sampling method chosen here is simple random sampling with no replacement. The newly generated sample shows that the rating distribution is still left-skewed.
+Another sampling method is systematic random sampling in which sample members from a larger population are selected according to a random starting point but with a fixed, periodic interval. 
+
+Simple random and systematic sampling is less labor intensive than using aggregate data; although there is some error, it is simple to obtain a rough assessment of trends for data with a large population(sample size large enough).
+
+Particular for this dataset, these two sampling method can approximate the distribution of the overall parameters if the sample size is large enough to reduce the analyst's workload. Simple random sampling is the easiest way to sampling. As the data of ratings is decimal fraction, use systematic random sampling is suitable to classify ratings. The use of systematic random sampling allows the sample to be grouped, resulting in more accurate estimates.
+
+```{r}
+# simple random sampling
+
+library(sampling)
+set.seed(100)
+s<-srswor(100,nrow(data))
+sample.2<-data[s!=0,]
+table(sample.2$Stars)
+plot(table(sample.2$Stars),xlab="Stars",ylim=c(0,16),ylab="Frequencies",main="Simple Random Sampling For Ramen Rating")
+
+# Systematic sampling
+set.seed(100)
+
+N <- nrow(data)
+
+n <- 70   #sample size=70
+k <- ceiling(N / n) 	#take a value upward
+r <- sample(k, 1)		#Take one number out of k.
+s <- seq(r, by = k, length = n)
+sample.1 <- data[s, ]
+table(sample.1$Stars)
+plot(table(sample.1$Stars),xlab="Stars",ylab="Frequencies",ylim=c(0,16),main="Systematic Random Sampling For Ramen Rating")
+
+```
+
+
+## 10. Summary
+60% of the ramen are pack-style, which is the overall majority. This packing style has a definite place in top.ten. with people preference.
