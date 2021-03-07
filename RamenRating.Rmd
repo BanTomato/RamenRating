@@ -1,7 +1,7 @@
 ---
 title: "Analysis of Ramen Ratings"
 output:
-  html_document:
+  output: rmarkdown::github_document
     fig_width: 8
     code_folding: hide
     highlight: tango
