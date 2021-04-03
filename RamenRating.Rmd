@@ -38,7 +38,6 @@ Data set contains ramen scoring status. Including review ids, ramen brands, vari
   2. Import the data set into R.
   Note: Set the working directory first.
 ```{r}
-setwd("E:/Final_proj")
 ramen.rating <- read.csv("ramen-ratings.csv",
                          header=TRUE)
 head(ramen.rating)
