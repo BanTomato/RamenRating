@@ -1,1 +1,1 @@
-https://akae610.github.io/RamenRating/
+https://bantomato.github.io/RamenRating/
